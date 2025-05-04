@@ -67,7 +67,7 @@ Key Columns Used:
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ```bash
 pip install pandas matplotlib seaborn jupyter
