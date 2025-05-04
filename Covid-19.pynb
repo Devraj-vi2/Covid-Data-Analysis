@@ -1,0 +1,68 @@
+
+# Import Libraries--
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import datetime as dt
+# Load the Dataset--
+
+df = pd.read_csv("covid_19_data.csv")
+
+# Display first few rows--
+df.head()
+# Data Cleaning & Preprocessing--
+# Convert date column to datetime
+df['ObservationDate'] = pd.to_datetime(df['ObservationDate'])
+
+# Group by date and country
+df_grouped = df.groupby(['ObservationDate', 'Country/Region'])[['Confirmed', 'Deaths', 'Recovered']].sum().reset_index()
+
+# Create a column for Active Cases
+df_grouped['Active'] = df_grouped['Confirmed'] - df_grouped['Deaths'] - df_grouped['Recovered']
+
+# Latest date in dataset
+latest_date = df_grouped['ObservationDate'].max()
+latest = df_grouped[df_grouped['ObservationDate'] == latest_date]
+# Top 10 Countries by Total Cases
+
+top_10 = latest.sort_values('Confirmed', ascending=False).head(10)
+
+plt.figure(figsize=(10,6))
+sns.barplot(data=top_10, x='Confirmed', y='Country/Region', palette='Reds_r')
+plt.title('Top 10 Countries by Confirmed Cases')
+plt.xlabel('Total Confirmed Cases')
+plt.ylabel('Country')
+plt.tight_layout()
+plt.show()
+# Time Series Trend (Global)--
+# Global time series
+global_ts = df_grouped.groupby('ObservationDate')[['Confirmed', 'Deaths', 'Recovered']].sum()
+
+plt.figure(figsize=(12,6))
+global_ts.plot(figsize=(12,6), linewidth=2)
+plt.title("Global COVID-19 Cases Over Time")
+plt.ylabel("Number of Cases")
+plt.xlabel("Date")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+# Correlation Analysis--
+# Correlation between Confirmed, Deaths, and Recovered
+corr = df_grouped[['Confirmed', 'Deaths', 'Recovered']].corr()
+
+sns.heatmap(corr, annot=True, cmap='coolwarm')
+plt.title('Correlation Matrix of COVID-19 Metrics')
+# Case Fatality Rate vs. Recovery Rate (Latest)--
+
+latest['FatalityRate (%)'] = (latest['Deaths'] / latest['Confirmed']) * 100
+latest['RecoveryRate (%)'] = (latest['Recovered'] / latest['Confirmed']) * 100
+
+plt.figure(figsize=(10,6))
+sns.scatterplot(data=latest, x='FatalityRate (%)', y='RecoveryRate (%)', hue='Country/Region', alpha=0.7, legend=False)
+plt.title("Fatality Rate vs. Recovery Rate by Country")
+plt.xlabel("Fatality Rate (%)")
+plt.ylabel("Recovery Rate (%)")
+plt.grid(True)
+plt.show()
